@@ -1,6 +1,6 @@
 <style lang="less">
   .g-mainBox {
-    min-height: 760/25rem;
+    //min-height: 760/25rem;
     .g-bg {
       background-image: url(public/img/bg.png);
       height: 465/25rem;
