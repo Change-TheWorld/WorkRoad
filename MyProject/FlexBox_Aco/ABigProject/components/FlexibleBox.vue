@@ -1,12 +1,12 @@
 <style lang="less">
   .m-flexibleBox {
     position: relative;
-    max-width: 100vw;
-    max-height: 100vh;
+    height: 100vh;
+    width: 100vw;
     color: red;
     .u-container {
-      position: absolute;
-      vertical-align: middle;
+      max-width: 100%;
+      max-height: 100%;
     }
   }
   /*
@@ -17,14 +17,15 @@
   @media screen and (min-aspect-ratio: 295/640) {
     .m-flexibleBox {
       color: blue;
-      transform: scale(.95,.95);
-      max-height: 90vh;
+
+  		transform-origin: 50% 50%;
     }
   }
   // 小米MIX, 小米MIX2 -> 360/720
   @media screen and (min-aspect-ratio: 319/640) {
     .m-flexibleBox {
       color: yellow;
+  		transform-origin: 50% 50%;
     }
   }
   /*
@@ -40,14 +41,14 @@
   @media screen and (min-aspect-ratio: 359/640) {
     .m-flexibleBox {
       color: green;
+  		transform-origin: 50% 50%;
     }
   }
 
   @media screen and (min-aspect-ratio: 379/640) {
     .m-flexibleBox {
       color: purple;
-      max-width: 90vw;
-      margin: 0 auto;
+  		transform-origin: 50% 50%;
     }
   }
 </style>
@@ -95,7 +96,7 @@
         flexibleBox.style.width = m_height;
         flexibleBox.style.height = m_width;
         //flexibleBox.style.top = (m_height - m_width)/2;
-        //flexibleBox.style.left = 0 - (m_height - m_width)/2;     
+        //flexibleBox.style.left = 0 - (m_height - m_width)/2;
 
         flexibleBox.style.cssText = "transform: scale(.95, .95); transform-origin: 50% 0; text-size-adjust : none";
         //flexibleBox.style.cssText = "transform: rotate(90deg); text-size-adjust : none";
