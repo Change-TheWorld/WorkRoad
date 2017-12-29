@@ -1,10 +1,15 @@
 <style>
+.roll{
+  text-shadow: 2px 2px 2px rgba(30,30,30,0.20);
+  color: #f98;
+  border: 2px solid #f98;
+}
 
 </style>
 
 <template lang="html">
   <div id="main">
-    <RollNumber :number="number" :size="size" :digit="digit"></RollNumber>
+    <RollNumber class="roll" :number="number" :size="size" :digit="digit"></RollNumber>
     <Footer></Footer>
   </div>
 </template>
@@ -13,9 +18,9 @@
 module.exports = {
   data: function() {
     return {
-      number: 469,   // 显示的数字
+      number: 39,   // 显示的数字
       size: 1,     // 组件的尺寸大小
-      digit: 4,    // 有几位数字
+      digit: 3,    // 有几位数字
     };
   },
   components: {

@@ -1,257 +1,115 @@
 <style lang="less">
-.clear {
-  clear: both;
-  height: 0;
-  line-height: 0;
-  font-size: 0;
-  overflow: hidden;
-}
-.clearfix {
-  *zoom: 1;
-}
-.clearfix:after {
-  content: "\20";
-  clear: both;
-  height: 0;
-  display: block;
-  overflow: hidden;
-} /*清除浮动*/
-
-@li_height: 50/25rem;
-@times: 0.5s;
-
 .RollNumber {
-  color: #ED641F;
+  @li_height: 40/25rem;
+  @times: 0.5s;
+
+  color: #000;
   background-color: #fff;
-  border: 3/25rem solid #A15B2E;
-  box-shadow: 0 2px 4px 0 rgba(30,30,30,0.20);
   border-radius: 20/25rem;
-  width: 160/25rem;
+  display: inline-block;
   padding: 0 2%;
   text-align: center;
   font-weight: 800;
-  font-size: 42/25rem;
-  .m_roll_container {
-    height: 50/25rem;
-    text-shadow: 2px 2px 2px rgba(30,30,30,0.20);
-    .u_roll_content {
-      float: left;
-      height: 50/25rem;
-      overflow: hidden;
-      .u_roll_item {
-        height: 50/25rem;
-        width: 30/25rem;
-        background-color: transparent;
-        text-align: center;
-        line-height: 50/25rem;
-      }
+  font-size: 36/25rem;
+  line-height: @li_height;
+  .u_roll_content {
+    float: left;
+    height: @li_height;
+    overflow: hidden;
+    .u_roll_item {
+      width: 30/25rem;
+      height: @li_height;
+      background-color: transparent;
+      text-align: center;
     }
+  }
+  /*清除浮动*/
+  .clear:after {
+    content: "\20";
+    clear: both;
+    height: 0;
+    display: block;
   }
 
-  .rolling_0 {
-    animation: rolling_0 @times ease forwards;
-  }
-  .rolling_1 {
-    animation: rolling_1 @times ease forwards;
-  }
-  .rolling_2 {
-    animation: rolling_2 @times ease forwards;
-  }
-  .rolling_3 {
-    animation: rolling_3 @times ease forwards;
-  }
-  .rolling_4 {
-    animation: rolling_4 @times ease forwards;
-  }
-  .rolling_5 {
-    animation: rolling_5 @times ease forwards;
-  }
-  .rolling_6 {
-    animation: rolling_6 @times ease forwards;
-  }
-  .rolling_7 {
-    animation: rolling_7 @times ease;
-  }
-  .rolling_8 {
-    animation: rolling_8 @times ease;
-  }
-  .rolling_9 {
-    animation: rolling_9 @times ease;
-  }
-  .rolling_10 {
-    animation: rolling_10 @times ease;
+  /* 使用less 循环*/
+
+  .loop_roll( @count )when( @count >= 0 ) {
+    @name: "rolling_@{count}";
+    .rolling_@{count} {
+      animation: @name @times ease forwards;
+    }
+    .loop_roll((@count - 1));
   }
 
-  /*-webkit-*/
-  @-webkit-keyframes rolling_0 {
-    from {
-      transform: translate3d(0, 0, 0);
+  .loop_keyframes(@number, @count: 0) when(@count <= @number) {
+    @rollname: 'rolling_@{count}';
+    @keyframes @rollname {
+      .precent_item(9);
     }
-    to {
-      transform: translate3d(0, @li_height*1, 0);
-    }
+    .loop_keyframes(@number,(@count + 1));
   }
-  @-webkit-keyframes rolling_1 {
-    0% {
-      transform: translate3d(0, 0, 0);
+
+  .precent_item(@n, @index: 0) when(@index <= @n) {
+    @keyframeSel: percentage(100/@n*@index);
+    @animanal_times: -@li_height*@index;
+    @{keyframeSel} {
+      transform: translate3d(0, @animanal_times, 0);
     }
-    100% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
+    .precent_item(@n, (@index + 1));
   }
-  @-webkit-keyframes rolling_2 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-    100% {
-      transform: translate3d(0, @li_height*2, 0);
-    }
-  }
-  @-webkit-keyframes rolling_3 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    33.3% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-    66.6% {
-      transform: translate3d(0, @li_height*2, 0);
-    }
-    100% {
-      transform: translate3d(0, @li_height*3, 0);
-    }
-  }
-  @-webkit-keyframes rolling_4 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    20% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*2, 0);
-    }
-    75% {
-      transform: translate3d(0, @li_height*3, 0);
-    }
-    100% {
-      transform: translate3d(0, @li_height*4, 0);
-    }
-  }
-  @-webkit-keyframes rolling_5 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    16.6% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*2, 0);
-    }
-    66.6% {
-      transform: translate3d(0, @li_height*3, 0);
-    }
-    83.3% {
-      transform: translate3d(0, @li_height*4, 0);
-    }
-    100% {
-      transform: translate3d(0, @li_height*5, 0);
-    }
-  }
-  @-webkit-keyframes rolling_6 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    14.2% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-    28.5% {
-      transform: translate3d(0, @li_height*2, 0);
-    }
-    42.8% {
-      transform: translate3d(0, @li_height*3, 0);
-    }
-    57.1% {
-      transform: translate3d(0, @li_height*4, 0);
-    }
-    71.4% {
-      transform: translate3d(0, @li_height*5, 0);
-    }
-    85.7% {
-      transform: translate3d(0, @li_height*6, 0);
-    }
-    100% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-  }
-  @-webkit-keyframes rolling_7 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-  }
-  @-webkit-keyframes rolling_8 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-  }
-  @-webkit-keyframes rolling_9 {
-    0% {
-      transform: translate3d(0, @li_height*0, 0);
-    }
-    50% {
-      transform: translate3d(0, @li_height*1, 0);
-    }
-  }
+
+
+
+  .loop_roll(9);
+  .loop_keyframes(9);
+  /* less循环结束*/
 }
 </style>
 
 <template lang="html">
-  <div class="RollNumber clearfix">
-    <div class="m_roll_container clearfix">
-      <ul class="u_roll_content clearfix" v-for="item in number">
-        <li class="u_roll_item" v-for="item2 in 10" :class="['rolling_' + item]">{{item2 - 1}}</li>
+  <div class="RollNumber clear">
+      <ul class="u_roll_content clear" v-for="item in String(number)">
+        <li class="u_roll_item" v-for="item2 in 10" :class="['rolling_' + item]">{{ item2 - 1 }}</li>
       </ul>
-    </div>
   </div>
 </template>
 
 <script>
 module.exports = {
   props: {
-    number: { type: Number }, // 显示的数字
-    size: { type: Number }, // 组件的尺寸大小
-    digit: { type: Number } // 有几位数字
+    number: { type: String }, // 显示的数字
+    size: { type: Number, defalut: 1 }, // 组件的尺寸大小
+    digit: { type: Number, default: 3 } // 有几位数字
   },
   data: function() {
     return {};
   },
+  created: function() {},
   // 初始化钩子函数
   mounted: function() {
     var that = this;
-    that.number = (that.fillZero(that.number, that.digit)).split('');
-    console.log('----------', that.number);
+    that.number = that.fillZero(that.number, that.digit);
   },
   // 方法
   methods: {
-    fillZero: function(number,digit) {
+    onTier: function(msg) {
+      this.$tier.close();
+      this.$tier.open({
+        content: msg,
+        btn: ["确定"]
+      });
+    },
+    fillZero: function(number, digit) {
       var len = number.toString().length;
       while (len < digit) {
         number = "0" + number;
         len++;
       }
       return number;
-    },
+    }
   },
   // 计算属性
   computed: {}
 };
 </script>
+
