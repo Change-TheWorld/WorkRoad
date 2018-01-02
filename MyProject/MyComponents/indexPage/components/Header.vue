@@ -6,14 +6,12 @@
 
 <template lang="html">
   <div class="Header">
-    {{header}}
   </div>
 </template>
 
 <script>
 module.exports = {
   props: {
-    header: String,
   },
   data: function() {
     return {

@@ -6,13 +6,11 @@
     margin: 3%;
     border: 1px solid orange;
   }
-  .u_compontent_0 {
-
+  .u_compontent_2 {
+    height: 100%;
   }
 
 }
-
-
 
 </style>
 
@@ -24,8 +22,8 @@
     <div class="u_compontent u_compontent_1">
       <QuestionMarking canBeClicked="1" v-model="star" starSize="1"></QuestionMarking>
     </div>
-    <div class="u_compontent u_compontent_1">
-
+    <div class="u_compontent u_compontent_2">
+      <learnVue></learnVue>
     </div>
     <div class="u_compontent u_compontent_3">
 
@@ -66,6 +64,7 @@ module.exports = {
   components: {
     RollNumber: require('public/components/RollNumber'),
     QuestionMarking: require('public/components/QuestionMarking'),
+    learnVue: require('public/components/learnVue'),
   },
   mounted: function() {
     var that = this;
