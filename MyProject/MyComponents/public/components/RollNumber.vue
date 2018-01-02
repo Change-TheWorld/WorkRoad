@@ -40,7 +40,7 @@
     }
     .loop_roll((@count - 1));
   }
-
+/*
   .loop_keyframes(@number, @count: 0) when(@count <= @number) {
     @rollname: 'rolling_@{count}';
     @keyframes @rollname {
@@ -57,11 +57,11 @@
     }
     .precent_item(@n, (@index + 1));
   }
-
+*/
 
 
   .loop_roll(9);
-  .loop_keyframes(9);
+  // .loop_keyframes(9);
   /* less循环结束*/
 }
 </style>
