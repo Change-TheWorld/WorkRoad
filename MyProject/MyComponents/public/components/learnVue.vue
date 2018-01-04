@@ -31,6 +31,10 @@
     <p>{{templateHtml}}</p>
     <p>using v-html <span v-html="templateHtml"></span></p>
   </div>
+    <div class="test">
+      <input type="number" v-model.number="age"> {{age}}
+      <input type="text" v-model.lazy="msg"> {{msg}}
+  </div>
 </div>
 </template>
 
@@ -40,6 +44,7 @@ module.exports = {
   data: function() {
     return {
       msg: "Hello Aco",
+      age: 0,
       todos: [
         {
           text: "学习 JavaScript"

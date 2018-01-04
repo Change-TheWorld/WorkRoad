@@ -907,9 +907,627 @@ Vue.config.keyCodes.f1 = 112
 
 这些修饰符会限制处理函数仅响应特定的鼠标按钮。 
 -->
+```
 
+#### 为什么在 HTML 中监听事件?
 
+你可能注意到这种事件监听的方式违背了关注点分离 (separation of concern) 这个长期以来的优良传统。但不必担心，因为所有的 Vue.js 事件处理方法和表达式都严格绑定在当前视图的 ViewModel 上，它不会导致任何维护上的困难。实际上，使用 v-on 有几个好处：
 
+1. 扫一眼 HTML 模板便能轻松定位在 JavaScript 代码里对应的方法。
+2. 因为你无须在 JavaScript 里手动绑定事件，你的 ViewModel 代码可以是非常纯粹的逻辑，和 DOM 完全解耦，更易于测试。
+3. 当一个 ViewModel 被销毁时，所有的事件处理器都会自动被删除。你无须担心如何自己清理它们。
+
+### 表单输入绑定
+
+v-model 指令在表单 `<input>` 及 `<textarea>` 元素上创建双向数据绑定。它会根据控件类型自动选取正确的方法来更新元素。它负责监听用户的输入事件以更新数据，并对一些极端场景进行一些特殊处理。
+
+v-model 会忽略所有表单元素的 value、checked、selected 特性的初始值而总是将 Vue 实例的数据作为数据来源。你应该通过 JavaScript 在组件的 data 选项中声明初始值。
+
+对于需要使用输入法 (如中文、日文、韩文等) 的语言，你会发现 v-model 不会在输入法组合文字过程中得到更新。如果你也想处理这个过程，请使用 input 事件。
+
+```html
+<div id='example-3'>
+  <input type="checkbox" id="jack" value="Jack" v-model="checkedNames">
+  <label for="jack">Jack</label>
+  <input type="checkbox" id="john" value="John" v-model="checkedNames">
+  <label for="john">John</label>
+  <input type="checkbox" id="mike" value="Mike" v-model="checkedNames">
+  <label for="mike">Mike</label>
+  <br>
+  <span>Checked names: {{ checkedNames }}</span>
+</div>
+
+<script>
+new Vue({
+  el: '#example-3',
+  data: {
+    checkedNames: []
+  }
+})
+</script>
+
+<div id="example-5">
+  <select v-model="selected">
+    <option disabled value="">请选择</option>
+    <option>A</option>
+    <option>B</option>
+    <option>C</option>
+  </select>
+  <span>Selected: {{ selected }}</span>
+</div>
+<!-- 如果 v-model 表达式的初始值未能匹配任何选项，<select> 元素将被渲染为“未选中”状态。在 iOS 中，这会使用户无法选择第一个选项。因为这样的情况下，iOS 不会触发 change 事件。因此，更推荐像上面这样提供一个值为空的禁用选项。 -->
+<script>
+new Vue({
+  el: '...',
+  data: {
+    selected: ''
+  }
+})
+</script>
+
+<!-- 用 v-for 渲染的动态选项： -->
+
+<select v-model="selected">
+  <option v-for="option in options" v-bind:value="option.value">
+    {{ option.text }}
+  </option>
+</select>
+<span>Selected: {{ selected }}</span>
+
+<script>
+new Vue({
+  el: '...',
+  data: {
+    selected: 'A',
+    options: [
+      { text: 'One', value: 'A' },
+      { text: 'Two', value: 'B' },
+      { text: 'Three', value: 'C' }
+    ]
+  }
+})
+</script>
+```
+
+##### 值绑定
+
+对于单选按钮，复选框及选择框的选项，v-model 绑定的值通常是静态字符串 (对于复选框也可以是布尔值)：
+
+```html
+<!-- 当选中时，`picked` 为字符串 "a" -->
+<input type="radio" v-model="picked" value="a">
+
+<!-- `toggle` 为 true 或 false -->
+<input type="checkbox" v-model="toggle">
+
+<!-- 当选中时，`selected` 为字符串 "abc" -->
+<select v-model="selected">
+  <option value="abc">ABC</option>
+</select>
+```
+
+但是有时我们可能想把值绑定到 Vue 实例的一个动态属性上，这时可以用 v-bind 实现，并且这个属性的值可以不是字符串。
+
+```html
+<!-- 复选框 -->
+<input
+  type="checkbox"
+  v-model="toggle"
+  true-value="yes"
+  false-value="no"
+>
+<script>
+// 当选中时
+vm.toggle === 'yes'
+// 当没有选中时
+vm.toggle === 'no'
+// 这里的 true-value 和 false-value 特性并不会影响输入控件的 value 特性，因为浏览器在提交表单时并不会包含未被选中的复选框。如果要确保表单中这两个值中的一个能够被提交，(比如“yes”或“no”)，请换用单选按钮。
+</script>
+
+<!-- 单选按钮 -->
+<input type="radio" v-model="pick" v-bind:value="a">
+<script>
+// 当选中时
+vm.pick === vm.a
+</script>
+
+<select v-model="selected">
+    <!-- 内联对象字面量 -->
+  <option v-bind:value="{ number: 123 }">123</option>
+</select>
+
+<script>
+// 当选中时
+typeof vm.selected // => 'object'
+vm.selected.number // => 123
+</script>
+```
+
+#### 修饰符
+
+```html
+.lazy
+<!-- 在默认情况下，v-model 在每次 input 事件触发后将输入框的值与数据进行同步 (除了上述输入法组合文字时)。你可以添加 lazy 修饰符，从而转变为使用 change 事件进行同步： -->
+
+<!-- 在“change”时而非“input”时更新 -->
+<input v-model.lazy="msg" >
+
+.number
+<!-- 如果想自动将用户的输入值转为数值类型，可以给 v-model 添加 number 修饰符： -->
+<input v-model.number="age" type="number">
+这通常很有用，因为即使在 type="number" 时，HTML 输入元素的值也总会返回字符串。
+
+.trim
+<!-- 如果要自动过滤用户输入的首尾空白字符，可以给 v-model 添加 trim 修饰符： -->
+<input v-model.trim="msg">
+```
+
+#### 组件
+
+什么是组件？
+组件 (Component) 是 Vue.js 最强大的功能之一。组件可以扩展 HTML 元素，封装可重用的代码。在较高层面上，组件是自定义元素，Vue.js 的编译器为它添加特殊功能。在有些情况下，组件也可以表现为用 is 特性进行了扩展的原生 HTML 元素。
+
+所有的 Vue 组件同时也都是 Vue 的实例，所以可接受相同的选项对象 (除了一些根级特有的选项) 并提供相同的生命周期钩子。
+
+请注意，对于自定义标签的命名 Vue.js 不强制遵循 W3C 规则 (小写，并且包含一个短杠)，尽管这被认为是最佳实践。
+
+组件在注册之后，便可以作为自定义元素 `<my-component></my-component>` 在一个实例的模板中使用。注意确保在初始化根实例之前注册组件：
+
+```html
+<div id="example">
+  <my-component></my-component>
+</div>
+<script>
+// 全局注册
+Vue.component('my-component', {
+  template: '<div>A custom component!</div>'
+})
+
+// 创建根实例
+new Vue({
+  el: '#example'
+})
+
+// 局部注册
+var Child = {
+  template: '<div>A custom component!</div>'
+}
+
+new Vue({
+  // ...
+  components: {
+    // <my-component> 将只在父组件模板中可用
+    'my-component': Child
+  }
+})
+</script>
+```
+
+DOM 模板解析注意事项
+
+当使用 DOM 作为模板时 (例如，使用 el 选项来把 Vue 实例挂载到一个已有内容的元素上)，你会受到 HTML 本身的一些限制，因为 `Vue 只有在浏览器解析、规范化模板之后才能获取其内容`。尤其要注意，像 `<ul>、<ol>、<table>、<select>` 这样的元素里允许包含的元素有限制，而另一些像 `<option>` 这样的元素只能出现在某些特定元素的内部。
+
+在自定义组件中使用这些受限制的元素时会导致一些问题，例如：
+
+```html
+<table>
+  <my-row>...</my-row>
+</table>
+<!-- 自定义组件 <my-row> 会被当作无效的内容，因此会导致错误的渲染结果。变通的方案是使用特殊的 is 特性： -->
+
+<table>
+  <tr is="my-row"></tr>
+</table>
+```
+
+应当注意，如果使用来自以下来源之一的字符串模板，则没有这些限制：
+
+  `<script type="text/x-template">`
+  JavaScript 内联模板字符串
+  .vue 组件
+
+因此，请尽可能使用字符串模板。
+
+#### 组件组合
+
+组件设计初衷就是要配合使用的，最常见的就是形成父子组件的关系：组件 A 在它的模板中使用了组件 B。它们之间必然需要相互通信：父组件可能要给子组件下发数据，子组件则可能要将它内部发生的事情告知父组件。
+
+然而，通过一个良好定义的接口来尽可能将父子组件解耦也是很重要的。这保证了每个组件的代码可以在相对隔离的环境中书写和理解，从而提高了其可维护性和复用性。
+
+在 Vue 中，父子组件的关系可以总结为` prop 向下传递，事件向上传递`。父组件通过 prop 给子组件下发数据，子组件通过emit事件给父组件发送消息。
+
+##### 使用 Prop 传递数据
+
+组件实例的作用域是孤立的。这意味着不能 (也不应该) 在子组件的模板内直接引用父组件的数据。父组件的数据需要通过 prop 才能下发到子组件中。
+
+子组件要显式地用 props 选项声明它预期的数据：
+
+```js
+Vue.component('child', {
+  // 声明 props
+  props: ['message'],
+  // 就像 data 一样，prop 也可以在模板中使用
+  // 同样也可以在 vm 实例中通过 this.message 来使用
+  template: '<span>{{ message }}</span>'
+})
+// 然后我们可以这样向它传入一个普通字符串：
+
+<child message="hello!"></child>
+```
+
+HTML 特性是不区分大小写的。所以，当使用的不是字符串模板时，camelCase (驼峰式命名) 的 prop 需要转换为相对应的 kebab-case (短横线分隔式命名)：
+
+与绑定到任何普通的 HTML 特性相类似，我们可以用 v-bind 来动态地将 prop 绑定到父组件的数据。每当父组件的数据变化时，该变化也会传导给子组件：
+
+```html
+<div>
+  <input v-model="parentMsg">
+  <br>
+  <child v-bind:my-message="parentMsg"></child>
+</div>
+<!-- 你也可以使用 v-bind 的缩写语法： -->
+
+<child :my-message="parentMsg"></child>
+
+<!-- 如果你想把一个对象的所有属性作为 prop 进行传递，可以使用不带任何参数的 v-bind (即用 v-bind 而不是 v-bind:prop-name)。例如，已知一个 todo 对象： -->
+<script>
+todo: {
+  text: 'Learn Vue',
+  isComplete: false
+}
+</script>
+<todo-item v-bind="todo"></todo-item>
+<!-- 将等价于： -->
+
+<todo-item
+  v-bind:text="todo.text"
+  v-bind:is-complete="todo.isComplete"
+></todo-item>
+
+<!-- 初学者常犯的一个错误是使用字面量语法传递数值： -->
+
+<!-- 传递了一个字符串 "1" -->
+<comp some-prop="1"></comp>
+
+<!-- 因为它是一个字面量 prop，它的值是字符串 "1" 而不是一个数值。如果想传递一个真正的 JavaScript 数值，则需要使用 v-bind，从而让它的值被当作 JavaScript 表达式计算： -->
+
+<!-- 传递真正的数值 -->
+<comp v-bind:some-prop="1"></comp>
+```
+
+#### 单向数据流
+
+Prop 是单向绑定的：当父组件的属性变化时，将传导给子组件，但是反过来不会。这是为了防止子组件无意间修改了父组件的状态，来避免应用的数据流变得难以理解。
+
+另外，每次父组件更新时，子组件的所有 prop 都会更新为最新值。这意味着你不应该在子组件内部改变 prop。如果你这么做了，Vue 会在控制台给出警告。
+
+在两种情况下，我们很容易忍不住想去修改 prop 中数据：
+
+  Prop 作为初始值传入后，子组件想把它当作局部数据来用；
+  Prop 作为原始数据传入，由子组件处理成其它数据输出。
+
+对这两种情况，正确的应对方式是：
+
+1. 定义一个局部变量，并用 prop 的值初始化它：
+
+```js
+props: ['initialCounter'],
+data: function () {
+  return { counter: this.initialCounter }
+}
+```
+
+2. 定义一个计算属性，处理 prop 的值并返回：
+
+```js
+props: ['size'],
+computed: {
+  normalizedSize: function () {
+    return this.size.trim().toLowerCase()
+  }
+}
+```
+
+注意在 JavaScript 中对象和数组是引用类型，指向同一个内存空间，如果 prop 是一个对象或数组，在子组件内部改变它会影响父组件的状态。
+
+#### Prop 验证
+
+我们可以为组件的 prop 指定验证规则。如果传入的数据不符合要求，Vue 会发出警告。这对于开发给他人使用的组件非常有用。
+
+要指定验证规则，需要用对象的形式来定义 prop，而不能用字符串数组：
+
+```js
+Vue.component('example', {
+  props: {
+    // 基础类型检测 (`null` 指允许任何类型)
+    propA: Number,
+    // 可能是多种类型
+    propB: [String, Number],
+    // 必传且是字符串
+    propC: {
+      type: String,
+      required: true
+    },
+    // 数值且有默认值
+    propD: {
+      type: Number,
+      default: 100
+    },
+    // 数组/对象的默认值应当由一个工厂函数返回
+    propE: {
+      type: Object,
+      default: function () {
+        return { message: 'hello' }
+      }
+    },
+    // 自定义验证函数
+    propF: {
+      validator: function (value) {
+        return value > 10
+      }
+    }
+  }
+})
+```
+
+type 可以是下面原生构造器：
+
+  String
+  Number
+  Boolean
+  Function
+  Object
+  Array
+  Symbol
+
+type 也可以是一个自定义构造器函数，使用 instanceof 检测。
+
+当 prop 验证失败，Vue 会抛出警告 (如果使用的是开发版本)。注意 `prop 会在组件实例创建之前进行校验`，所以在 default 或 validator 函数里，诸如 data、computed 或 methods 等实例属性还无法使用。
+
+##### 非 Prop 特性
+
+所谓非 prop 特性，就是指它可以直接传入组件，而不需要定义相应的 prop。
+
+尽管为组件定义明确的 prop 是推荐的传参方式，组件的作者却并不总能预见到组件被使用的场景。所以，组件可以接收任意传入的特性，这些特性都会被添加到组件的根元素上。
+
+例如，假设我们使用了第三方组件 bs-date-input，它包含一个 Bootstrap 插件，该插件需要在 input 上添加 data-3d-date-picker 这个特性。这时可以把特性直接添加到组件上 (不需要事先定义 prop)：
+
+```html
+<bs-date-input data-3d-date-picker="true"></bs-date-input>
+```
+
+添加属性 `data-3d-date-picker="true"` 之后，它会被自动添加到 bs-date-input 的根元素上。
+
+##### 替换/合并现有的特性
+
+假设这是 bs-date-input 的模板：
+
+```html
+<input type="date" class="form-control">
+<!-- 为了给该日期选择器插件增加一个特殊的主题，我们可能需要增加一个特殊的 class，比如： -->
+
+<bs-date-input
+  data-3d-date-picker="true"
+  class="date-picker-theme-dark"
+></bs-date-input>
+```
+
+在这个例子当中，我们定义了两个不同的 class 值：
+
+form-control，来自组件自身的模板
+date-picker-theme-dark，来自父组件
+对于多数特性来说，传递给组件的值会覆盖组件本身设定的值。即例如传递 type="large" 将会覆盖 type="date" 且有可能破坏该组件！所幸我们对待 `class 和 style 特性会更聪明一些，这两个特性的值都会做合并 (merge) 操作`，让最终生成的值为：`form-control date-picker-theme-dark`。
+
+#### 自定义事件
+
+使用 v-on 绑定自定义事件
+每个 Vue 实例都实现了事件接口，即：
+
+  使用 $on(eventName) 监听事件
+  使用 $emit(eventName) 触发事件
+
+Vue 的事件系统与浏览器的 EventTarget API 有所不同。尽管它们的运行起来类似，但是 $on 和 $emit 并不是addEventListener 和 dispatchEvent 的别名。
+
+另外，父组件可以在使用子组件的地方直接用 v-on 来监听子组件触发的事件。
+
+不能用 $on 侦听子组件释放的事件，而必须在模板里直接用 v-on 绑定，参见下面的例子。
+
+```html
+<div id="counter-event-example">
+  <p>{{ total }}</p>
+  <button-counter v-on:increment="incrementTotal"></button-counter>
+  <button-counter v-on:increment="incrementTotal"></button-counter>
+</div>
+
+<script>
+Vue.component('button-counter', {
+  template: '<button v-on:click="incrementCounter">{{ counter }}</button>',
+  data: function () {
+    return {
+      counter: 0
+    }
+  },
+  methods: {
+    incrementCounter: function () {
+      this.counter += 1
+      this.$emit('increment')
+    }
+  },
+})
+
+new Vue({
+  el: '#counter-event-example',
+  data: {
+    total: 0
+  },
+  methods: {
+    incrementTotal: function () {
+      this.total += 1
+    }
+  }
+})
+</script>
+```
+
+子组件已经和它外部完全解耦了。它所做的只是报告自己的内部事件，因为父组件可能会关心这些事件。
+
+##### .sync 修饰符
+
+在一些情况下，我们可能会需要对一个 prop 进行“双向绑定”。
+
+当一个子组件改变了一个带 .sync 的 prop 的值时，这个变化也会同步到父组件中所绑定的值。这很方便，但也会导致问题，因为它破坏了单向数据流。由于子组件改变 prop 的代码和普通的状态改动代码毫无区别，当光看子组件的代码时，你完全不知道它何时悄悄地改变了父组件的状态。这在 debug 复杂结构的应用时会带来很高的维护成本。
+
+但是，在开发可复用的组件库时。有时候我们需要做的只是让子组件改变父组件状态的代码更容易被区分。
+
+作为一个编译时的语法糖存在。它会被扩展为一个自动更新父组件属性的 v-on 监听器。
+
+```html
+<comp :foo.sync="bar"></comp>
+会被扩展为：
+
+<comp :foo="bar" @update:foo="val => bar = val"></comp>
+当子组件需要更新 foo 的值时，它需要显式地触发一个更新事件：
+
+this.$emit('update:foo', newValue)
+```
+
+##### 使用自定义事件的表单输入组件
+
+自定义事件可以用来创建自定义的表单输入组件，使用 v-model 来进行数据双向绑定。要牢记：
+
+```html
+<input v-model="something">
+<!-- 这不过是以下示例的语法糖： -->
+
+<input
+  v-bind:value="something"
+  v-on:input="something = $event.target.value">
+<!-- 所以在组件中使用时，它相当于下面的简写： -->
+
+<custom-input
+  v-bind:value="something"
+  v-on:input="something = arguments[0]">
+</custom-input>
+```
+
+所以要让组件的 v-model 生效，它应该 (从 2.2.0 起是可配置的)：
+
+接受一个 value prop
+在有新的值时触发 input 事件并将新值作为参数
+
+##### 非父子组件的通信
+
+有时候，非父子关系的两个组件之间也需要通信。在简单的场景下，可以使用一个空的 Vue 实例作为事件总线：
+
+```js
+var bus = new Vue()
+// 触发组件 A 中的事件
+bus.$emit('id-selected', 1)
+// 在组件 B 创建的钩子中监听事件
+bus.$on('id-selected', function (id) {
+  // ...
+})
+```
+
+在复杂的情况下，我们应该考虑使用专门的状态管理模式。
+
+使用插槽分发内容
+在使用组件时，我们常常要像这样组合它们：
+
+```html
+<app>
+  <app-header></app-header>
+  <app-footer></app-footer>
+</app>
+```
+
+注意两点：
+
+`<app>` 组件不知道它会收到什么内容。这是由使用 `<app>` 的父组件决定的。
+
+`<app>` 组件很可能有它自己的模板。
+
+为了让组件可以组合，我们需要一种方式来混合父组件的内容与子组件自己的模板。这个过程被称为内容分发 (即 Angular 用户熟知的“transclusion”)。Vue.js 实现了一个内容分发 API，参照了当前 Web Components 规范草案，使用特殊的 `<slot>` 元素作为原始内容的插槽。
+
+组件作用域简单地说是：父组件模板的内容在父组件作用域内编译；子组件模板的内容在子组件作用域内编译。
+
+##### 单个插槽
+
+子组件写结构，父组件填内容
+
+除非子组件模板包含至少一个 `<slot>` 插口，否则父组件的内容将会被丢弃。当子组件模板只有一个没有属性的插槽时，父组件传入的整个内容片段将插入到插槽所在的 DOM 位置，并替换掉插槽标签本身。
+
+最初在 `<slot>` 标签中的任何内容都被视为备用内容。备用内容在子组件的作用域内编译，并且只有在宿主元素为空，且没有要插入的内容时才显示备用内容。
+
+```html
+<div>
+  <h2>我是子组件的标题</h2>
+  <slot>
+    只有在没有要分发的内容时才会显示。
+  </slot>
+</div>
+父组件模板：
+
+<div>
+  <h1>我是父组件的标题</h1>
+  <my-component>
+    <p>这是一些初始内容</p>
+    <p>这是更多的初始内容</p>
+  </my-component>
+</div>
+渲染结果：
+
+<div>
+  <h1>我是父组件的标题</h1>
+  <div>
+    <h2>我是子组件的标题</h2>
+    <p>这是一些初始内容</p>
+    <p>这是更多的初始内容</p>
+  </div>
+</div>
+
+```
+
+`<slot>` 元素可以用一个特殊的特性 name 来进一步配置如何分发内容。多个插槽可以有不同的名字。具名插槽将匹配内容片段中有对应 slot 特性的元素。
+
+仍然可以有一个匿名插槽，它是默认插槽，作为找不到匹配的内容片段的备用插槽。如果没有默认插槽，这些找不到匹配的内容片段将被抛弃。
+
+```html
+<div class="container">
+  <header>
+    <slot name="header"></slot>
+  </header>
+  <main>
+    <slot></slot>
+  </main>
+  <footer>
+    <slot name="footer"></slot>
+  </footer>
+</div>
+父组件模板：
+
+<app-layout>
+  <h1 slot="header">这里可能是一个页面标题</h1>
+
+  <p>主要内容的一个段落。</p>
+  <p>另一个主要段落。</p>
+
+  <p slot="footer">这里有一些联系信息</p>
+</app-layout>
+渲染结果为：
+
+<div class="container">
+  <header>
+    <h1>这里可能是一个页面标题</h1>
+  </header>
+  <main>
+    <p>主要内容的一个段落。</p>
+    <p>另一个主要段落。</p>
+  </main>
+  <footer>
+    <p>这里有一些联系信息</p>
+  </footer>
+</div>
 ```
 
 
