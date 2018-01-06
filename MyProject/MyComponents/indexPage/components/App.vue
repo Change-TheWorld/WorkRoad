@@ -23,7 +23,7 @@
       <QuestionMarking canBeClicked="1" v-model="star" starSize="1"></QuestionMarking>
     </div>
     <div class="u_compontent u_compontent_2">
-      <learnVue></learnVue>
+      <learn-vue></learn-vue>
     </div>
     <div class="u_compontent u_compontent_3">
 

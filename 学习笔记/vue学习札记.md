@@ -1530,25 +1530,238 @@ bus.$on('id-selected', function (id) {
 </div>
 ```
 
+##### 作用域插槽
 
+作用域插槽是一种特殊类型的插槽，用作一个 (能被传递数据的) 可重用模板，来代替已经渲染好的元素。
 
+在 2.5.0+，slot-scope 能被用在任意元素或组件中而不再局限于 `<template>`。
 
+作用域插槽更典型的用例是在列表组件中，允许使用者自定义如何渲染列表的每一项：
 
+```html
+<my-awesome-list :items="items">
+  <!-- 作用域插槽也可以是具名的 -->
+  <li
+    slot="item"
+    slot-scope="props"
+    class="my-fancy-item">
+    {{ props.text }}
+  </li>
+</my-awesome-list>
+<!-- 列表组件的模板： -->
 
+<ul>
+  <slot name="item"
+    v-for="item in items"
+    :text="item.text">
+    <!-- 这里写入备用内容 -->
+  </slot>
+</ul>
+```
 
+解构
+slot-scope 的值实际上是一个可以出现在函数签名参数位置的合法的 JavaScript 表达式。这意味着在受支持的环境 (单文件组件或现代浏览器) 中，您还可以在表达式中使用 ES2015 解构：
 
+```html
+<child>
+  <span slot-scope="{ text }">{{ text }}</span>
+</child>
+```
 
+##### 动态组件
 
+通过使用保留的 `<component>` 元素，动态地绑定到它的 is 特性，我们让多个组件可以使用同一个挂载点，并动态切换：
 
+```html
+<script>
+var vm = new Vue({
+  el: '#example',
+  data: {
+    currentView: 'home'
+  },
+  components: {
+    home: { /* ... */ },
+    posts: { /* ... */ },
+    archive: { /* ... */ }
+  }
+})
+</script>
+<component v-bind:is="currentView">
+  <!-- 组件在 vm.currentview 变化时改变！ -->
+</component>
 
+<!-- 也可以直接绑定到组件对象上： -->
+<script>
+var Home = {
+  template: '<p>Welcome home!</p>'
+}
 
+var vm = new Vue({
+  el: '#example',
+  data: {
+    currentView: Home
+  }
+})
+</script>
+<!-- keep-alive -->
+<!-- 如果把切换出去的组件保留在内存中，可以保留它的状态或避免重新渲染。为此可以添加一个 keep-alive 指令参数： -->
 
+<keep-alive>
+  <component :is="currentView">
+    <!-- 非活动组件将被缓存！ -->
+  </component>
+</keep-alive>
+```
 
+###### 编写可复用组件
 
+在编写组件时，最好考虑好以后是否要进行复用。一次性组件间有紧密的耦合没关系，但是可复用组件应当定义一个清晰的公开接口，同时也不要对其使用的外层数据作出任何假设。
 
+Vue 组件的 API 来自三部分——prop、事件和插槽：
 
+  Prop 允许外部环境传递数据给组件；
+  事件允许从组件内触发外部环境的副作用；
+  插槽允许外部环境将额外的内容组合在组件中。
 
+使用 v-bind 和 v-on 的简写语法，模板的意图会更清楚且简洁：
 
+```html
+<my-component
+  :foo="baz"
+  :bar="qux"
+  @event-a="doThis"
+  @event-b="doThat"
+>
+  <img slot="icon" src="...">
+  <p slot="main-text">Hello!</p>
+</my-component>
+```
+
+##### 子组件引用
+
+尽管有 prop 和事件，但是有时仍然需要在 JavaScript 中直接访问子组件。为此可以使用 ref 为子组件指定一个引用 ID。例如：
+
+```html
+<div id="parent">
+  <user-profile ref="profile"></user-profile>
+</div>
+
+<script>
+var parent = new Vue({ el: '#parent' })
+// 访问子组件实例
+var child = parent.$refs.profile
+</script>
+<!-- 当 ref 和 v-for 一起使用时，获取到的引用会是一个数组，包含和循环数据源对应的子组件。 -->
+```
+
+`$refs` 只在组件渲染完成后才填充，并且它是非响应式的。它仅仅是一个直接操作子组件的应急方案——应当避免在模板或计算属性中使用 `$refs`。
+
+##### 高级异步组件
+
+2.3.0 新增
+
+自 2.3.0 起，异步组件的工厂函数也可以返回一个如下的对象：
+
+```js
+const AsyncComp = () => ({
+  // 需要加载的组件。应当是一个 Promise
+  component: import('./MyComp.vue'),
+  // 加载中应当渲染的组件
+  loading: LoadingComp,
+  // 出错时渲染的组件
+  error: ErrorComp,
+  // 渲染加载中组件前的等待时间。默认：200ms。
+  delay: 200,
+  // 最长等待时间。超出此时间则渲染错误组件。默认：Infinity
+  timeout: 3000
+})
+```
+
+注意，当一个异步组件被作为 vue-router 的路由组件使用时，这些高级选项都是无效的，因为在路由切换前就会提前加载所需要的异步组件。另外，如果你要在路由组件中使用上述写法，需要使用 vue-router 2.4.0 以上的版本。
+
+##### 组件命名约定
+
+当注册组件 (或者 prop) 时，可以使用 kebab-case (短横线分隔命名)、camelCase (驼峰式命名) 或 PascalCase (单词首字母大写命名)。
+
+```html
+<script>
+// 在组件定义中
+components: {
+  // 使用 kebab-case 注册
+  'kebab-cased-component': { /* ... */ },
+  // 使用 camelCase 注册
+  'camelCasedComponent': { /* ... */ },
+  // 使用 PascalCase 注册
+  'PascalCasedComponent': { /* ... */ }
+}
+</script>
+
+<!-- 在 HTML 模板中始终使用 kebab-case -->
+<kebab-cased-component></kebab-cased-component>
+<camel-cased-component></camel-cased-component>
+<pascal-cased-component></pascal-cased-component>
+
+<!-- 
+当使用字符串模式时，可以不受 HTML 大小写不敏感的限制。这意味实际上在模板中，你可以使用下面的方式来引用你的组件：
+
+  kebab-case
+  camelCase 或 kebab-case (如果组件已经被定义为 camelCase)
+  kebab-case、camelCase 或 PascalCase (如果组件已经被定义为 PascalCase)
+-->
+<script>
+components: {
+  'kebab-cased-component': { /* ... */ },
+  camelCasedComponent: { /* ... */ },
+  PascalCasedComponent: { /* ... */ }
+}
+</script>
+
+<kebab-cased-component></kebab-cased-component>
+
+<camel-cased-component></camel-cased-component>
+<camelCasedComponent></camelCasedComponent>
+
+<pascal-cased-component></pascal-cased-component>
+<pascalCasedComponent></pascalCasedComponent>
+<PascalCasedComponent></PascalCasedComponent>
+
+<!-- 这意味着 PascalCase(单词首字母大写命名) 是最通用的声明约定而 kebab-case(短横线分隔命名) 是最通用的使用约定。 -->
+```
+
+##### 组件间的循环引用
+
+假设你正在构建一个文件目录树，像在 Finder 或资源管理器中。你可能有一个 tree-folder 组件：
+
+```html
+<p>
+  <span>{{ folder.name }}</span>
+  <tree-folder-contents :children="folder.children"/>
+</p>
+以及一个 tree-folder-contents 组件：
+
+<ul>
+  <li v-for="child in children">
+    <tree-folder v-if="child.children" :folder="child"/>
+    <span v-else>{{ child.name }}</span>
+  </li>
+</ul>
+```
+
+当你仔细看时，会发现在渲染树上这两个组件同时为对方的父节点和子节点——这是矛盾的！当使用 Vue.component 将这两个组件注册为全局组件的时候，框架会自动为你解决这个矛盾。
+
+然而，如果你使用诸如 webpack 或者 Browserify 之类的模块化管理工具来 require/import 组件的话，就会报错了：
+
+`Failed to mount component: template or render function not defined.`
+
+为了解释为什么会报错，简单的将上面两个组件称为 A 和 B。模块系统看到它需要 A，但是首先 A 需要 B，但是 B 需要 A，而 A 需要 B，循环往复。因为不知道到底应该先解析哪个，所以将会陷入无限循环。要解决这个问题，我们需要在其中一个组件中告诉模块化管理系统：“A 虽然最后会用到 B，但是不需要优先导入 B”。
+
+在我们的例子中，可以选择让 tree-folder 组件中来做这件事。我们知道引起矛盾的子组件是 tree-folder-contents，所以我们要等到 beforeCreate 生命周期钩子中才去注册它：
+
+```js
+beforeCreate: function () {
+  this.$options.components.TreeFolderContents = require('./tree-folder-contents.vue')
+}
+```
 
 
 
