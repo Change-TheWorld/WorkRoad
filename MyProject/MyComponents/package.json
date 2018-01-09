@@ -1,17 +1,22 @@
 {
-  "name": "vue",
-  "subname": "",
-  "version": "1.0.0",
-  "description": "",
+  "name": "MyComponents",
+  "JOB_NAME": "MyComponents",
+  "subname": "MyComponents",
+  "version": "0.0.1",
+  "description": "MyComponents",
+  "private": true,
   "devDependencies": {
-    "fis3-deploy-replace": "^1.0.2",
+    "fis3-deploy-replace": "1.0.2",
     "fis3-hook-commonjs": "0.1.26",
     "fis3-hook-node_modules": "2.2.8",
     "fis3-parser-vue-component": "5.4.0",
     "fis3-postpackager-loader": "2.1.4"
   },
+  "dependencies": {},
   "scripts": {
-    "debug": "fis3 server start --type php --no-browse -p 8080 && fis3 release debug -c && fis3 release debug -wL",
-    "dev": "fis3 release develop -c"
+    "debug": "fis3 server start --type php --no-browse -p 8088 && fis3 release debug -c && fis3 release debug -wL",
+    "develop": "fis3 release develop -c",
+    "dev": "fis3 release develop -c",
+    "online": "fis3 release online -c"
   }
 }
