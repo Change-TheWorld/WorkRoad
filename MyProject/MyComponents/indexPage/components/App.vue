@@ -23,7 +23,7 @@
       <QuestionMarking canBeClicked="1" v-model="star" starSize="1"></QuestionMarking>
     </div>
     <div class="u_compontent u_compontent_2">
-      <learn-vue></learn-vue>
+      <learnVue></learnVue>
     </div>
     <div class="u_compontent u_compontent_3">
 
@@ -62,9 +62,9 @@ module.exports = {
     };
   },
   components: {
-    RollNumber: require('public/components/RollNumber'),
-    QuestionMarking: require('public/components/QuestionMarking'),
-    learnVue: require('public/components/learnVue'),
+    RollNumber: require('RollNumber'),
+    QuestionMarking: require('QuestionMarking'),
+    learnVue: require('learnVue'),
   },
   mounted: function() {
     var that = this;
