@@ -375,12 +375,297 @@ $t->_print();
 // __TRAIT__ PHP 实现了代码复用的一个方法，称为 traits。Trait 名包括其被声明的作用区域（例如 Foo\Bar）。
 // 从基类继承的成员被插入的 SayWorld Trait 中的 MyHelloWorld 方法所覆盖。其行为 MyHelloWorld 类中定义的方法一致。优先顺序是当前类中的方法会覆盖 trait 方法，而 trait 方法又覆盖了基类中的方法。
 
+class Base {
+    public function sayHello() {
+        echo "hello ";
+    }
+}
+
+trait SayWorld {
+    public function sayHello() {
+        parent::sayHello();
+        echo "world!";
+    }
+}
+
+class MyHelloWorld extends Base {
+    use SayWorld;
+}
+
+$o = new MyHelloWorld();
+$o->sayHello();
+
+// __METHOD__ 类的方法名（PHP 5.0.0 新加）。返回该方法被定义时的名字（区分大小写）。
+
+// __NAMESPACE__ 当前命名空间的名称（区分大小写）。
+
+?>
+```
+
+##### PHP 命名空间
+
+PHP 命名空间可以解决以下两类问题：
+    用户编写的代码与PHP内部的类/函数/常量或第三方类/函数/常量之间的名字冲突。
+    为很长的标识符名称(通常是为了缓解第一类问题而定义的)创建一个别名（或简短）的名称，提高源代码的可读性。
+
+```php
+<?php
+// 定义代码在 'MyProject' 命名空间中
+namespace MyProject;
+
+// ... 代码 ...
+namespace MyProject {
+    const CONNECT_OK = 1;
+    class Connection { /* ... */ }
+    function connect() { /* ... */  }
+}
+
+namespace AnotherProject {
+    const CONNECT_OK = 1;
+    class Connection { /* ... */ }
+    function connect() { /* ... */  }
+}
+
+namespace { // 全局代码
+    session_start();
+    $a = MyProject\connect();
+    echo MyProject\Connection::start();
+}
+
+// 在声明命名空间之前唯一合法的代码是用于定义源文件编码方式的 declare 语句。所有非 PHP 代码包括空白符都不能出现在命名空间的声明之前。
+declare(encoding='UTF-8'); //定义多个命名空间和不包含在命名空间中的代码
+
+// 子命名空间 与目录和文件的关系很象，PHP 命名空间也允许指定层次化的命名空间的名称。因此，命名空间的名字可以使用分层次的方式定义：
+namespace MyProject\Sub\Level;  //声明分层次的单个命名空间
+
+const CONNECT_OK = 1;
+class Connection { /* ... */ }
+function Connect() { /* ... */  }
 
 
 
 
 ?>
 ```
+
+##### 命名空间使用
+
+PHP 命名空间中的类名可以通过三种方式引用：
+
+非限定名称，或不包含前缀的类名称，例如 `$a=new foo();` 或 `foo::staticmethod();`。如果当前命名空间是 currentnamespace，foo 将被解析为 `currentnamespace\foo`。如果使用 foo 的代码是全局的，不包含在任何命名空间中的代码，则 foo 会被解析为foo。 警告：如果命名空间中的函数或常量未定义，则该非限定的函数名称或常量名称会被解析为全局函数名称或常量名称。
+
+限定名称,或包含前缀的名称，例如 `$a = new subnamespace\foo();` 或 `subnamespace\foo::staticmethod();`。如果当前的命名空间是 currentnamespace，则 foo 会被解析为 `currentnamespace\subnamespace\foo`。如果使用 foo 的代码是全局的，不包含在任何命名空间中的代码，foo 会被解析为subnamespace\foo。
+
+完全限定名称，或包含了全局前缀操作符的名称，例如，`$a = new \currentnamespace\foo();` 或 `\currentnamespace\foo::staticmethod();`。在这种情况下，foo 总是被解析为代码中的文字名`(literal name)currentnamespace\foo`。
+
+```php
+<?php
+/* 非限定名称 */
+foo(); // 解析为 Foo\Bar\foo resolves to function Foo\Bar\foo
+foo::staticmethod(); // 解析为类 Foo\Bar\foo的静态方法staticmethod。resolves to class Foo\Bar\foo, method staticmethod
+echo FOO; // resolves to constant Foo\Bar\FOO
+
+/* 限定名称 */
+subnamespace\foo(); // 解析为函数 Foo\Bar\subnamespace\foo
+subnamespace\foo::staticmethod(); // 解析为类 Foo\Bar\subnamespace\foo, 以及类的方法 staticmethod
+echo subnamespace\FOO; // 解析为常量 Foo\Bar\subnamespace\FOO
+
+/* 完全限定名称 */
+\Foo\Bar\foo(); // 解析为函数 Foo\Bar\foo
+\Foo\Bar\foo::staticmethod(); // 解析为类 Foo\Bar\foo, 以及类的方法 staticmethod
+echo \Foo\Bar\FOO; // 解析为常量 Foo\Bar\FOO
+
+// 在命名空间内部访问全局类、函数和常量
+namespace Foo;
+
+function strlen() {}
+const INI_ALL = 3;
+class Exception {}
+
+$a = \strlen('hi'); // 调用全局函数strlen
+$b = \INI_ALL; // 访问全局常量 INI_ALL
+$c = new \Exception('error'); // 实例化全局类 Exception
+?>
+```
+
+##### 使用命名空间：别名/导入
+
+PHP 命名空间支持 有两种使用别名或导入方式：为类名称使用别名，或为命名空间名称使用别名。
+
+在PHP中，别名是通过操作符 use 来实现的. 下面是一个使用所有可能的三种导入方式的例子：
+
+```php
+<?php
+// 1、使用use操作符导入/使用别名
+namespace foo;
+use My\Full\Classname as Another;
+
+// 下面的例子与 use My\Full\NSname as NSname 相同
+use My\Full\NSname;
+
+// 导入一个全局类
+use \ArrayObject;
+
+$obj = new namespace\Another; // 实例化 foo\Another 对象
+$obj = new Another; // 实例化 My\Full\Classname　对象
+NSname\subns\func(); // 调用函数 My\Full\NSname\subns\func
+$a = new ArrayObject(array(1)); // 实例化 ArrayObject 对象
+// 如果不使用 "use \ArrayObject" ，则实例化一个 foo\ArrayObject 对象
+
+// 2、 一行中包含多个use语句
+use My\Full\Classname as Another, My\Full\NSname;
+
+$obj = new Another; // 实例化 My\Full\Classname 对象
+NSname\subns\func(); // 调用函数 My\Full\NSname\subns\func
+导入操作是在编译执行的，但动态的类名称、函数名称或常量名称则不是。
+
+// 3、导入和动态名称
+use My\Full\Classname as Another, My\Full\NSname;
+
+$obj = new Another; // 实例化一个 My\Full\Classname 对象
+$a = 'Another';
+$obj = new $a;      // 实际化一个 Another 对象
+另外，导入操作只影响非限定名称和限定名称。完全限定名称由于是确定的，故不受导入的影响。
+
+// 4、导入和完全限定名称
+use My\Full\Classname as Another, My\Full\NSname;
+
+$obj = new Another; // instantiates object of class My\Full\Classname
+$obj = new \Another; // instantiates object of class Another
+$obj = new Another\thing; // instantiates object of class My\Full\Classname\thing
+$obj = new \Another\thing; // instantiates object of class Another\thing
+
+// 全局空间
+// 如果没有定义任何命名空间，所有的类与函数的定义都是在全局空间，与 PHP 引入命名空间概念前一样。在名称前加上前缀 \ 表示该名称是全局空间中的名称，即使该名称位于其它的命名空间中时也是如此。
+namespace A\B\C;
+
+/* 这个函数是 A\B\C\fopen */
+function fopen() {
+     /* ... */
+     $f = \fopen(...); // 调用全局的fopen函数
+     return $f;
+}
+?>
+```
+
+##### 调用顺序
+
+名称解析遵循下列规则：
+
+1. 对完全限定名称的函数，类和常量的调用在编译时解析。例如 new \A\B 解析为类 A\B。
+
+2. 所有的非限定名称和限定名称（非完全限定名称）根据当前的导入规则在编译时进行转换。例如，如果命名空间 A\B\C 被导入为 C，那么对 C\D\e() 的调用就会被转换为 A\B\C\D\e()。
+
+3. 在命名空间内部，所有的没有根据导入规则转换的限定名称均会在其前面加上当前的命名空间名称。例如，在命名空间 A\B 内部调用 C\D\e()，则 C\D\e() 会被转换为 A\B\C\D\e() 。
+
+4. 非限定类名根据当前的导入规则在编译时转换（用全名代替短的导入名称）。例如，如果命名空间 A\B\C 导入为C，则 new C() 被转换为 new A\B\C() 。
+
+5. 在命名空间内部（例如A\B），对非限定名称的函数调用是在运行时解析的。例如对函数 foo() 的调用是这样解析的：
+    在当前命名空间中查找名为 A\B\foo() 的函数
+    尝试查找并调用 全局(global) 空间中的函数 foo()。
+
+6. 在命名空间（例如A\B）内部对非限定名称或限定名称类（非完全限定名称）的调用是在运行时解析的。下面是调用 new C() 及 new D\E() 的解析过程： new C()的解析:
+    在当前命名空间中查找A\B\C类。
+    尝试自动装载类A\B\C。
+new D\E()的解析:
+    在类名称前面加上当前命名空间名称变成：A\B\D\E，然后查找该类。
+    尝试自动装载类 A\B\D\E。
+为了引用全局命名空间中的全局类，必须使用完全限定名称 new \C()。
+
+```php
+namespace A;
+use B\D, C\E as F;
+
+// 函数调用
+
+foo();      // 首先尝试调用定义在命名空间"A"中的函数foo()
+            // 再尝试调用全局函数 "foo"
+
+\foo();     // 调用全局空间函数 "foo" 
+
+my\foo();   // 调用定义在命名空间"A\my"中函数 "foo" 
+
+F();        // 首先尝试调用定义在命名空间"A"中的函数 "F" 
+            // 再尝试调用全局函数 "F"
+
+// 类引用
+
+new B();    // 创建命名空间 "A" 中定义的类 "B" 的一个对象
+            // 如果未找到，则尝试自动装载类 "A\B"
+
+new D();    // 使用导入规则，创建命名空间 "B" 中定义的类 "D" 的一个对象
+            // 如果未找到，则尝试自动装载类 "B\D"
+
+new F();    // 使用导入规则，创建命名空间 "C" 中定义的类 "E" 的一个对象
+            // 如果未找到，则尝试自动装载类 "C\E"
+
+new \B();   // 创建定义在全局空间中的类 "B" 的一个对象
+            // 如果未发现，则尝试自动装载类 "B"
+
+new \D();   // 创建定义在全局空间中的类 "D" 的一个对象
+            // 如果未发现，则尝试自动装载类 "D"
+
+new \F();   // 创建定义在全局空间中的类 "F" 的一个对象
+            // 如果未发现，则尝试自动装载类 "F"
+
+// 调用另一个命名空间中的静态方法或命名空间函数
+
+B\foo();    // 调用命名空间 "A\B" 中函数 "foo"
+
+B::foo();   // 调用命名空间 "A" 中定义的类 "B" 的 "foo" 方法
+            // 如果未找到类 "A\B" ，则尝试自动装载类 "A\B"
+
+D::foo();   // 使用导入规则，调用命名空间 "B" 中定义的类 "D" 的 "foo" 方法
+            // 如果类 "B\D" 未找到，则尝试自动装载类 "B\D"
+
+\B\foo();   // 调用命名空间 "B" 中的函数 "foo"
+
+\B::foo();  // 调用全局空间中的类 "B" 的 "foo" 方法
+            // 如果类 "B" 未找到，则尝试自动装载类 "B"
+
+// 当前命名空间中的静态方法或函数
+
+A\B::foo();   // 调用命名空间 "A\A" 中定义的类 "B" 的 "foo" 方法
+              // 如果类 "A\A\B" 未找到，则尝试自动装载类 "A\A\B"
+
+\A\B::foo();  // 调用命名空间 "A\B" 中定义的类 "B" 的 "foo" 方法
+              // 如果类 "A\B" 未找到，则尝试自动装载类 "A\B"
+
+```
+
+### PHP 对象
+
+对象的主要三个特性：
+
+    对象的行为：可以对 对象施加那些操作，开灯，关灯就是行为。
+    对象的形态：当施加那些方法是对象如何响应，颜色，尺寸，外型。
+    对象的表示：对象的表示就相当于身份证，具体区分在相同的行为与状态下有什么不同。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
