@@ -953,12 +953,12 @@ PHP 不会在子类的构造方法中自动的调用父类的构造方法。要�
 
 // PHP 获取下拉菜单的数据
 // 单选
-<form action="" method="get">
+<form action="XXX.php" method="get">
     <select name="q">
-    <option value="">选择一个站点:</option>
-    <option value="RUNOOB">Runoob</option>
-    <option value="GOOGLE">Google</option>
-    <option value="TAOBAO">Taobao</option>
+        <option value="">选择一个站点:</option>
+        <option value="RUNOOB">Runoob</option>
+        <option value="GOOGLE">Google</option>
+        <option value="TAOBAO">Taobao</option>
     </select>
     <input type="submit" value="提交">
 </form>
@@ -968,11 +968,18 @@ $q = isset($_GET['q']) ? htmlspecialchars($_GET['qq']) : '';
 // 多选
 <form action="" method="post">
     <select multiple="multiple" name="q[]">
-    <option value="">选择一个站点:</option>
-    <option value="RUNOOB">Runoob</option>
-    <option value="GOOGLE">Google</option>
-    <option value="TAOBAO">Taobao</option>
+        <option value="">选择一个站点:</option>
+        <option value="RUNOOB">Runoob</option>
+        <option value="GOOGLE">Google</option>
+        <option value="TAOBAO">Taobao</option>
     </select>
+    <input type="submit" value="提交">
+</form>
+
+<form action="" method="post">
+    <input type="checkbox" name="q[]" value="RUNOOB"> Runoob<br>
+    <input type="checkbox" name="q[]" value="GOOGLE"> Google<br>
+    <input type="checkbox" name="q[]" value="TAOBAO"> Taobao<br>
     <input type="submit" value="提交">
 </form>
 
@@ -992,7 +999,11 @@ if(is_array($q)) {
 // 单选按钮表单
 // PHP 单选按钮表单中 name 属性的值是一致的，value 值是不同的
 
+/*
+应该在任何可能的时候对用户输入进行验证（通过客户端脚本）。浏览器验证速度更快，并且可以减轻服务器的负载。
 
+如果用户输入需要插入数据库，您应该考虑使用服务器验证。在服务器验证表单的一种好的方式是，把表单传给它自己，而不是跳转到不同的页面。这样用户就可以在同一张表单页面得到错误信息。用户也就更容易发现错误了。
+*/
 
 ```
 
